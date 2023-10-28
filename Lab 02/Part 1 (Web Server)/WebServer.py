@@ -24,7 +24,7 @@ while True:
 
         print(f'File: {filename}')
 
-        f = open(filename[1:])
+        f = open(filename[1:], 'r')
         readData = f.read()
 
         # Send one HTTP header line into socket
@@ -36,7 +36,7 @@ while True:
         # Send the content of the requested file to the client
         for i in range(0, len(readData)):
             connectionSocket.send(readData[i].encode())
-            connectionSocket.send("\r\n".encode())
+        connectionSocket.send("\r\n".encode())
         connectionSocket.close()
 
     except IOError:
