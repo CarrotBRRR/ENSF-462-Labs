@@ -1,78 +1,94 @@
 from socket import *
 import os
-from urllib.parse import urlparse
 
-PROXY_PORT = 8888
-server_host = 'localhost'
-CACHE_DIR = './Lab 03/cache/'
-HTML = '.html'
+tcpSerSock = socket(AF_INET, SOCK_STREAM)
 
-def handle_request(client):
-    message = client.recv(4096).decode('utf-8')
+server_address = ("127.0.0.1", 8888)
+tcpSerSock.bind(server_address)
+tcpSerSock.listen(1)
 
-    print("MESSAGE: ", message)
+domainName = ""
+searchFile = ""
+while 1:
+    # start receiving data from the client
+    print("Ready to serve...")
 
-    lines = message.split('\r\n')
-    if len(lines) == 0:
-        return
+    tcpCliSock, addr = tcpSerSock.accept()
+    print("Received a connection from:", addr)
 
-    line1 = lines[0]
-    print("first line: ", line1)
-    method, url, http = line1.split(' ')
+    # Fill in start.
+    message = tcpCliSock.recv(1024).decode()
+    # Fill in end.
+    print("MESSAGE:", message)
 
-    if method != 'GET':
-        respose = b'HTTP/1.1 400 Bad Request\r\n\r\n'
-        client.sendall(respose)
-        return
-    
-    cached_file_path = os.path.join(CACHE_DIR, url.strip('/'))
-    cached_file_path += ".html"
-    print("Cache Path: ", cached_file_path)
-    if os.path.exists(cached_file_path):
-    # Serve the object from the cache
-        with open(cached_file_path, 'rb') as cached_file:
-            response = "HTTP/1.0 200 OK\r\n\r\n"
-            client.send(response.encode())
-            data = cached_file.read()
-            print("DATA: ", data)
-            client.sendall(data.encode('utf-8'))
+    # Extract the filename from the given message
+    if len(message) > 1:
+        print(message.split()[1])
+        filename = message.split()[1].partition("/")[2]
+        print(filename)
+
+    fileExist = False
+
+    if filename.startswith("www."):
+        domainName = filename
+        print(f"domainName = {domainName}")
     else:
-        try:
-            server = socket(AF_INET, SOCK_STREAM)
-            host = url.strip('/')
-            server.connect((host, 80))
+        searchFile = filename
+        print(f"searchFile = {searchFile}")
+    try:
+        file_path = os.path.join("./Lab 03/cache/", domainName + "/" + filename)
+        print(f"file_path = {file_path}")
 
-            server.sendall(message.encode())
+        # Check wether the file exist in the cache
+        f = open(f"./{file_path}", "rb")
+        outputdata = f.readlines()
+        fileExist = True
+        print("Hit in cache")
 
-            response = server.recv(4096)
-            print("RESPONSE: ", response.decode())
+        # ProxyServer finds a cache hit and generates a response message
+        tcpCliSock.send("HTTP/1.0 200 OK\r\n".encode())
+        tcpCliSock.send("Content-Type:text/html\r\n".encode())
 
-            # Save the object in the cache
-            client.sendall(response)
-            with open(cached_file_path, 'w') as cached_file:
-                cached_file.write(response.decode())
+        for line in outputdata:
+            tcpCliSock.send(line)
+        tcpCliSock.send("\r\n".encode())
 
+        tcpCliSock.close()
 
-        except Exception as e:
-            print('oof Error: ', e)
-            return
-    
+    except IOError:
+        if fileExist == False:
+            # Create a socket on the proxyserver
+            c = socket(AF_INET, SOCK_STREAM)
+
+            try:
+                # Connect to the socket to port 80
+                c.connect((domainName, 80))
+
+                # Create a temporary file on this socket and ask port 80 for the file requested by the client
+                fileobj = c.makefile("rwb", 0)
+                request = "GET /" + searchFile + " HTTP/1.0\r\n\r\n"
+                fileobj.write(request.encode())
+
+                buff = fileobj.readlines()
+                file_path = os.path.join("./Lab 03/cache/", domainName + "/" + filename)
+
+                os.makedirs(os.path.dirname(file_path), exist_ok=True)
+                
+                # Write the response to the cache file
+                # Also send the response in the buffer to client socket and the corresponding file in the cache
+                with open(f"./{file_path}", "wb") as f:
+                    for line in buff:
+                        f.write(line)
+                        tcpCliSock.send(line)
+            except:
+                print("Illegal request")
+            
+            c.close()
+
+        else:
+            tcpCliSock.send("HTTP/1.0 400 Bad Request\r\n".encode())
 
     # Close the client and the server sockets
-    client.close()
-    server.close()
+    tcpCliSock.close()
 
-def main():
-    proxy_socket = socket(AF_INET, SOCK_STREAM)
-    proxy_socket.bind((server_host, PROXY_PORT))
-    proxy_socket.listen(1)
-
-    while True:
-        client, addr = proxy_socket.accept()
-        print("Connection from", addr)
-        handle_request(client)
-
-if __name__ == '__main__':
-    if not os.path.exists(CACHE_DIR):
-        os.makedirs(CACHE_DIR)
-    main()
+tcpSerSock.close()
