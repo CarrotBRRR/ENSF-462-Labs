@@ -27,23 +27,10 @@ if __name__ == "__main__":
     time_of_last_data = time.time()
 
     rdt = RDT.RDT("sender", args.receiver, args.port)
+    seq_num = 0
+
     for msg_S in msg_L:
-        print("Sent Message: " + msg_S)
-        rdt.rdt_1_0_send(msg_S)
-
-        # try to receive message before timeout
-        msg_S = None
-        while msg_S == None:
-            msg_S = rdt.rdt_1_0_receive()
-            if msg_S is None:
-                if time_of_last_data + timeout < time.time():
-                    break
-                else:
-                    continue
-        time_of_last_data = time.time()
-
-        # print the result
-        if msg_S:
-            print("Received Message: " + msg_S + "\n")
+        seq_num += 1
+        rdt.rdt_3_0_send(msg_S, seq_num)
 
     rdt.disconnect()

@@ -1,2 +1,5 @@
 # Lab 3 Files to ignore
 Lab 03/cache/*
+
+# Lab 4 Files to Ignore
+__pycache__/
