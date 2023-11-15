@@ -11,19 +11,27 @@ if __name__ == "__main__":
     time_of_last_data = time.time()
 
     rdt = RDT.RDT("receiver", None, args.port)
-    expected_seq_num = 1
-
     while True:
-        msg_S = rdt.rdt_3_0_receive()
-
-        if msg_S is None:
+        # try to receive message before timeout
+        rcvPkt = rdt.rdt_3_0_receive()
+        if rcvPkt is None:
             if time_of_last_data + timeout < time.time():
+                print("Timeout: No more data. Closing connection.")
                 break
             else:
                 continue
         time_of_last_data = time.time()
-
-        # reply back the message
-        print(f"Reply: {msg_S}\n")
+        if rcvPkt == True:
+            print(
+                f"Corruption detected! Sending ACK {rdt.seq_num - 1}\n"
+            )
+            rdt.rdt_3_0_send(str(rdt.seq_num - 1))
+        else:
+            print(
+                f"Receive message {rcvPkt.seq_num}. Send ACK {rdt.seq_num}\n"
+            )
+            rdt.rdt_3_0_send(str(rcvPkt.seq_num))
+            if rcvPkt.seq_num == rdt.seq_num:
+                rdt.seq_num += 1
 
     rdt.disconnect()
