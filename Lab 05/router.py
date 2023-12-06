@@ -57,7 +57,7 @@ def receive_udp(port):
 
     return message.decode()
 
-def send_link_state(router_id, port, neighbors):
+def send_link_state(router_id, neighbors):
     while True:
         message = json.dumps({"id": router_id, "neighbors": neighbors})
         for neighbor in neighbors:
@@ -84,6 +84,7 @@ def print_routing_table(router_id, distance, previous, node_count):
         if destination == router_id: #if self, distance = 0
             distance[destination] = 0
             prev_node_id = router_id
+
         else:
             prev_node_id = (previous[destination] 
                             if previous[destination] is not None 
@@ -121,7 +122,7 @@ def main(router_id, router_port, config_file):
 
     # Threads for each component
     send_thread = threading.Thread(
-        target=send_link_state, args=(router_id, router_port, neighbors))
+        target=send_link_state, args=(router_id, neighbors))
     
     receive_thread = threading.Thread(
         target=receive_and_broadcast_link_state,
