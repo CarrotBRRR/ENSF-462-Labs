@@ -77,7 +77,8 @@ def print_routing_table(router_id, distance, previous, node_count):
     router_label = chr(router_id + ord("A"))
 
     # Print Dijkstra output
-    print("\nDestID Dist PrevID")
+    print("------------------------------------")
+    print("DestID Dist PrevID")
     for destination in range(node_count):
         # Print the current router with a Previous_node_id of its own ID
         if destination == router_id:
@@ -108,6 +109,7 @@ def print_routing_table(router_id, distance, previous, node_count):
                     chr(next_hop + ord("A")) if next_hop is not None else "None")
 
             print(f"{destination}      {next_hop_label}")
+    print("------------------------------------")
 
 def main(router_id, router_port, config_file):
     node_count, neighbors = load_config(config_file)
