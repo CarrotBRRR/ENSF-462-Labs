@@ -76,19 +76,20 @@ def receive_and_broadcast_link_state(port, neighbors, link_state):
 def print_routing_table(router_id, distance, previous, node_count):
     router_label = chr(router_id + ord("A"))
 
-    # Print Dijkstra output
+    # Print Dijkstra
     print("------------------------------------")
     print("DestID Dist PrevID")
 
     for destination in range(node_count):
-        if destination == router_id: #if self, distance is 0
-            print(f"{destination}      0    {router_id}")
+        if destination == router_id: #if self, distance = 0
+            distance[destination] = 0
+            prev_node_id = router_id
         else:
             prev_node_id = (previous[destination] 
                             if previous[destination] is not None 
                             else "-")
             
-            print(f"{destination}      {distance[destination]}    {prev_node_id}")
+        print(f"{destination}      {distance[destination]}    {prev_node_id}")
 
     # Forwarding table
     print(f"\nThe forwarding table in {router_label} is printed as follows:")
