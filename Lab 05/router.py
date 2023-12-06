@@ -81,9 +81,8 @@ def print_routing_table(router_id, distance, previous, node_count):
     print("DestID Dist PrevID")
 
     for destination in range(node_count):
-        # Print the current router with a Previous_node_id of its own ID
-        if destination == router_id:
-            print(f"{destination}      {router_id}")
+        if destination == router_id: #if self, distance is 0
+            print(f"{destination}      0    {router_id}")
         else:
             prev_node_id = (previous[destination] 
                             if previous[destination] is not None 
