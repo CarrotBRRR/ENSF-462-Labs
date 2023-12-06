@@ -21,8 +21,8 @@ def load_config(filename):
                     })
                 
             else:
-                if line.strip():  # Check if line is not just empty or spaces
-                    print(f"Skipping invalid line: {line.strip()}")
+                if line.strip():  # if line is empty or spaces
+                    print(f"Ignoring line: {line.strip()}")
 
         return node_count, neighbors
 
@@ -38,10 +38,10 @@ def dijkstra(graph, source):
 
         for neighbor_info in graph[current_node]:
             neighbor, cost = neighbor_info["id"], neighbor_info["cost"]
-            tentative_value = distance[current_node] + cost
+            temp_value = distance[current_node] + cost
 
-            if tentative_value < distance[neighbor]:
-                distance[neighbor] = tentative_value
+            if temp_value < distance[neighbor]:
+                distance[neighbor] = temp_value
                 previous[neighbor] = current_node
 
     return distance, previous
@@ -79,19 +79,22 @@ def print_routing_table(router_id, distance, previous, node_count):
     # Print Dijkstra output
     print("------------------------------------")
     print("DestID Dist PrevID")
+
     for destination in range(node_count):
         # Print the current router with a Previous_node_id of its own ID
         if destination == router_id:
             print(f"{destination}      {router_id}")
         else:
-            prev_node_id = (
-                previous[destination] if previous[destination] is not None else "-")
+            prev_node_id = (previous[destination] 
+                            if previous[destination] is not None 
+                            else "-")
             
-            print(f"{destination}      {distance[destination]}     {prev_node_id}")
+            print(f"{destination}      {distance[destination]}    {prev_node_id}")
 
     # Forwarding table
     print(f"\nThe forwarding table in {router_label} is printed as follows:")
     print("DestID NextLabel")
+    
     for destination in range(node_count):
         if destination != router_id:
             next_hop = previous[destination]
@@ -105,10 +108,11 @@ def print_routing_table(router_id, distance, previous, node_count):
                     
                     next_hop = previous[next_hop]
 
-                next_hop_label = (
-                    chr(next_hop + ord("A")) if next_hop is not None else "None")
+                next_hop_label = (chr(next_hop + ord("A")) 
+                                  if next_hop is not None else "None")
 
             print(f"{destination}      {next_hop_label}")
+
     print("------------------------------------")
 
 def main(router_id, router_port, config_file):
