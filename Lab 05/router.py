@@ -135,8 +135,9 @@ def main(router_id, router_port, config_file):
         if len(link_state) == node_count:
             distance, previous = dijkstra(link_state, router_id)
             print_routing_table(router_id, distance, previous, node_count)
+            return
 
-        time.sleep(10)
+        time.sleep(1)
 
 if __name__ == "__main__":
     if len(sys.argv) != 4:
